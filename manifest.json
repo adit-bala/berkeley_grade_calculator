@@ -1,0 +1,16 @@
+{
+    "manifest_version": 3,
+    "name": "Berkeley Grade Calculator",
+    "description": "Calculate your grades in CalCentral",
+    "version": "1.0",
+    "permissions": ["scripting"],
+    "content_scripts": [
+        {
+          "js": ["content.js"],
+          "run_at": "document_end",
+          "matches": [
+            "https://calcentral.berkeley.edu/academics"
+          ]
+        }
+      ]
+  }
