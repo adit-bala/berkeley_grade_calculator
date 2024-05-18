@@ -9,5 +9,5 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     sendResponse({ classes: Array.from(classMap.entries()) });
   }
 
-  return false; // Required to keep the message channel open for sendResponse
+  return true; // Required to keep the message channel open for sendResponse
 });

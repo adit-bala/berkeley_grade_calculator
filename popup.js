@@ -24,7 +24,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .then(setDOMInfo);
   });
 });
-console.log(classMap);
 
 function setDOMInfo(info) {
   classMap = new Map(info.classes);
@@ -44,7 +43,12 @@ function setDOMInfo(info) {
     gradeValuesMap
   );
   const row = document.createElement("tr");
-  row.innerHTML = `<td>${Math.round(totalGradePoints)}</td><td>${totalUnits}</td><td>${currGPA.toFixed(3)}</td>`;
+  let gpaString = currGPA?.toString();
+  row.innerHTML = `<td>${Math.round(
+    totalGradePoints
+  )}</td><td>${totalUnits}</td><td>${parseFloat(
+    gpaString.slice(0, gpaString.indexOf(".") + 3 + 1)
+  )}</td>`;
   tGPAbody.appendChild(row);
 }
 
@@ -65,3 +69,73 @@ function calculateOverallGPA(classMap, gradeValuesMap) {
   const currGPA = totalGradePoints / totalUnits;
   return { totalGradePoints, totalUnits, currGPA };
 }
+
+function modifyGPA(row, unit, gpa, reversal) {
+  const tGPAbody = document.getElementById("GPA");
+  const units = parseInt(row.querySelector(".units").value);
+  const grade = row.querySelector(".grades option:checked").textContent;
+  const gpaRow = tGPAbody.rows[1];
+  if (unit) {
+    totalUnits += isNaN(units) ? 0 : reversal ? -units : units;
+  }
+  if (gpa && gradeValuesMap.has(grade)) {
+    const gradePoints = gradeValuesMap.get(grade) * units;
+    totalGradePoints += reversal ? -gradePoints : gradePoints;
+  }
+  const currGPA = totalGradePoints / totalUnits;
+  const totalUnitsCell = gpaRow.cells[1];
+  const GPAcell = gpaRow.cells[2];
+  totalUnitsCell.textContent = totalUnits;
+  GPAcell.textContent = currGPA;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  var addCourseButton = document.getElementById("addClass");
+  let row, tbody;
+  addCourseButton.addEventListener("click", function () {
+    tbody = document.getElementById("courseTable");
+    row = tbody.insertRow();
+    row.innerHTML = `<td><input type="text" id="courseName" name="courseName" placeholder="Optional"></td>
+      <td><input type="text" class="units" name="units" required></td>
+      <td> <select class="grades" name="grade" required>
+              <option value="">Select Grade</option>
+              <option value="A+">A+</option>
+              <option value="A">A</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B">B</option>
+              <option value="B-">B-</option>
+              <option value="C+">C+</option>
+              <option value="C">C</option>
+              <option value="C-">C-</option>
+              <option value="D+">D+</option>
+              <option value="D">D</option>
+              <option value="D-">D-</option>
+              <option value="F">F</option>
+          </select></td>
+      <td><input type="button" class="removeClass" value="Remove Class" ></td>`;
+
+    tbody.appendChild(row);
+    row.querySelector(".removeClass").addEventListener("click", () => {
+      // reverse units and gpa
+      modifyGPA(row, true, true, true);
+      tbody.removeChild(row);
+    });
+    row.querySelector(".units").addEventListener("beforeinput", () => {
+      // reverse units
+      modifyGPA(row, true, false, true);
+    });
+    row.querySelector(".grades").addEventListener("beforechange", () => {
+      // reverse gpa
+      modifyGPA(row, false, true, true);
+    });
+    row.querySelector(".units").addEventListener("input", () => {
+      // add units
+      modifyGPA(row, true, false, false);
+    });
+    row.querySelector(".grades").addEventListener("change", () => {
+      // add gpa
+      modifyGPA(row, false, true, false);
+    });
+  });
+});
