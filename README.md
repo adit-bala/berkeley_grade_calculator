@@ -19,4 +19,7 @@ Click on the "Load unpacked" button.
 Select the directory where you cloned the repository.
 
 ## Usage
-Once the extension is loaded, you should see its icon appear in the Chrome toolbar. Click on the icon to use the extension.
+Once the extension is loaded, you should see its icon appear in the Chrome toolbar. Navigate to [calcentral](https://calcentral.berkeley.edu/academics) and click on the icon to use the extension.
+
+### Note
+The extension will not work unless you visit the calcentral academics page directly :,)
