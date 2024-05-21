@@ -38,10 +38,8 @@ function setDOMInfo(info) {
       tbody.appendChild(row);
     });
   const tGPAbody = document.getElementById("GPA");
-  const { totalGradePoints, totalUnits, currGPA } = calculateOverallGPA(
-    classMap,
-    gradeValuesMap
-  );
+  const { totalGradePoints, totalUnits, currGPA } =
+    calculateOverallGPA();
   const row = document.createElement("tr");
   let gpaString = currGPA?.toString();
   row.innerHTML = `<td>${Math.round(
@@ -52,11 +50,13 @@ function setDOMInfo(info) {
   tGPAbody.appendChild(row);
 }
 
-function calculateOverallGPA(classMap, gradeValuesMap) {
+function calculateOverallGPA() {
+  totalGradePoints = 0;
+  totalUnits = 0;
   classMap.forEach((cls) => {
     const grade = cls.grade;
     const units = parseFloat(cls.units);
-    if (gradeValuesMap.has(grade)) {
+    if (gradeValuesMap.has(grade) && units) {
       const gradePoints = gradeValuesMap.get(grade);
       totalGradePoints += gradePoints * units;
       totalUnits += units;
@@ -70,37 +70,32 @@ function calculateOverallGPA(classMap, gradeValuesMap) {
   return { totalGradePoints, totalUnits, currGPA };
 }
 
-function modifyGPA(row, unit, gpa, reversal) {
+function modifyGPA() {
   const tGPAbody = document.getElementById("GPA");
-  const units = parseInt(row.querySelector(".units").value);
-  const grade = row.querySelector(".grades option:checked").textContent;
+  const { totalGradePoints, totalUnits, currGPA } =
+    calculateOverallGPA();
   const gpaRow = tGPAbody.rows[1];
-  if (unit) {
-    totalUnits += isNaN(units) ? 0 : reversal ? -units : units;
-  }
-  if (gpa && gradeValuesMap.has(grade)) {
-    const gradePoints = gradeValuesMap.get(grade) * units;
-    totalGradePoints += reversal ? -gradePoints : gradePoints;
-  }
-  const currGPA = totalGradePoints / totalUnits;
+  const totalGradePoint = gpaRow.cells[0];
   const totalUnitsCell = gpaRow.cells[1];
   const GPAcell = gpaRow.cells[2];
+  totalGradePoint.textContent = totalGradePoints;
   totalUnitsCell.textContent = totalUnits;
   GPAcell.textContent = currGPA;
 }
-
+var index = 0;
 document.addEventListener("DOMContentLoaded", function () {
   var addCourseButton = document.getElementById("addClass");
   let row, tbody;
   addCourseButton.addEventListener("click", function () {
     tbody = document.getElementById("courseTable");
     row = tbody.insertRow();
+    row.id = `course-${index}`; // Unique ID for the row
+    index += 1;
     row.innerHTML = `<td><input type="text" id="courseName" name="courseName" placeholder="Optional"></td>
       <td><input type="text" class="units" name="units" required></td>
       <td> <select class="grades" name="grade" required>
-              <option value="">Select Grade</option>
               <option value="A+">A+</option>
-              <option value="A">A</option>
+              <option value="A" selected>A</option>
               <option value="A-">A-</option>
               <option value="B+">B+</option>
               <option value="B">B</option>
@@ -112,30 +107,23 @@ document.addEventListener("DOMContentLoaded", function () {
               <option value="D">D</option>
               <option value="D-">D-</option>
               <option value="F">F</option>
-          </select></td>
-      <td><input type="button" class="removeClass" value="Remove Class" ></td>`;
-
+          </select></td>`;
     tbody.appendChild(row);
-    row.querySelector(".removeClass").addEventListener("click", () => {
-      // reverse units and gpa
-      modifyGPA(row, true, true, true);
-      tbody.removeChild(row);
-    });
-    row.querySelector(".units").addEventListener("beforeinput", () => {
-      // reverse units
-      modifyGPA(row, true, false, true);
-    });
-    row.querySelector(".grades").addEventListener("beforechange", () => {
-      // reverse gpa
-      modifyGPA(row, false, true, true);
-    });
+    classMap.set(row.id, { title: -1, units: 0.0, grade: "A" });
     row.querySelector(".units").addEventListener("input", () => {
+      const prev = classMap.get(row.id);
+      let unit = parseInt(row.querySelector(".units").value);
+      unit = isNaN(unit) ? 0 : unit;
+      prev.units = unit;
+      classMap.set(row.id, prev);
       // add units
-      modifyGPA(row, true, false, false);
+      modifyGPA();
     });
     row.querySelector(".grades").addEventListener("change", () => {
-      // add gpa
-      modifyGPA(row, false, true, false);
+      const prev = classMap.get(row.id);
+      prev.grade = row.querySelector(".grades option:checked").textContent;
+      classMap.set(row.id, prev);
+      modifyGPA();
     });
   });
 });
